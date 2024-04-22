@@ -229,7 +229,7 @@ class TCRain(Hazard):
     def from_tracks(
         cls,
         tracks: TCTracks,
-        centroids: Optional[Centroids] = None,
+        centroids: Centroids,
         pool: Optional[pathos.pools.ProcessPool] = None,
         model: str = 'R-CLIPER',
         model_kwargs: Optional[dict] = None,
@@ -297,7 +297,7 @@ class TCRain(Hazard):
         ----------
         tracks : climada.hazard.TCTracks
             Tracks of storm events.
-        centroids : Centroids, optional
+        centroids : Centroids
             Centroids where to model TC. Default: global centroids at 360 arc-seconds resolution.
         pool : pathos.pool, optional
             Pool that will be used for parallel computation of rain fields. Default: None
@@ -397,21 +397,13 @@ class TCRain(Hazard):
         TCRain
         """
         num_tracks = tracks.size
-        if centroids is None:
-            centroids = Centroids.from_base_grid(res_as=360, land=True)
-
-        if not centroids.coord.size:
-            centroids.set_meta_to_lat_lon()
-
         if ignore_distance_to_coast:
             # Select centroids with lat <= max_latitude
             [idx_centr_filter] = (np.abs(centroids.lat) <= max_latitude).nonzero()
         else:
             # Select centroids which are inside max_dist_inland_km and lat <= max_latitude
-            if not centroids.dist_coast.size:
-                centroids.set_dist_coast()
             [idx_centr_filter] = (
-                (centroids.dist_coast <= max_dist_inland_km * 1000)
+                (centroids.get_dist_coast() <= max_dist_inland_km * 1000)
                 & (np.abs(centroids.lat) <= max_latitude)
             ).nonzero()
 
