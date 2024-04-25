@@ -38,6 +38,7 @@ setup(
 
     install_requires=[
         'climada>=4.1',
+        'boario',
         'cdsapi',
         'osm-flex',
         "pymrio",
